@@ -1,8 +1,12 @@
+import sys
+
 from fastapi.templating import Jinja2Templates
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
+    test: bool = Field("pytest" in sys.modules, validation_alias="TEST")
     DEBUG: bool = True
 
     BASE_URL: str = "http://localhost:8000"
@@ -22,8 +26,11 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(env_file="conf/.env", env_file_encoding="utf-8")
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    @field_validator("DB_NAME", mode="before")
+    def set_db_name(cls, db, info):
+        if info.data["test"]:
+            return "test_" + db
+        return db
 
     @property
     def database_url(self) -> str:

@@ -1,6 +1,7 @@
 from typing import AsyncGenerator, TypeAlias
 
 from fastapi import Depends, Request
+from sqlalchemy import NullPool
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 from sqlalchemy.ext.asyncio import create_async_engine as _create_async_engine
 
@@ -15,6 +16,14 @@ def create_async_engine() -> AsyncEngine:
         echo=settings.DEBUG,
         pool_size=settings.DATABASE_POOL_SIZE,
         pool_recycle=settings.DATABASE_POOL_RECYCLE_SECONDS,
+    )
+
+
+def create_test_async_engine() -> AsyncEngine:
+    return _create_async_engine(
+        url=settings.database_url,
+        echo=True,
+        poolclass=NullPool,
     )
 
 

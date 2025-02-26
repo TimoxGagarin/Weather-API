@@ -27,7 +27,6 @@ async def lifespan(app: FastAPI) -> AsyncIterator[State]:
     async_sessionmaker = create_async_sessionmaker(async_engine)
 
     yield {
-        "async_engine": async_engine,
         "async_sessionmaker": async_sessionmaker,
         "weather_service": OWMWeatherService,
     }
