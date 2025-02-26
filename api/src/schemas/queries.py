@@ -12,7 +12,6 @@ class DisplayQuery(BaseModel):
     temp: float
     wind_speed: float
     wind_degree: int
-    wind_gust: int
     humidity: int
     description: str
     pressure: int

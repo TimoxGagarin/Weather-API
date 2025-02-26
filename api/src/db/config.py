@@ -1,25 +1,47 @@
-from typing import AsyncGenerator
+from typing import AsyncGenerator, TypeAlias
 
-from sqlalchemy import create_engine
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from fastapi import Depends, Request
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
+from sqlalchemy.ext.asyncio import create_async_engine as _create_async_engine
 
 from api.src.settings import settings
 
-async_engine = create_async_engine(
-    settings.database_url,
-    pool_size=5,
-    max_overflow=10,
-    pool_timeout=30,
-    pool_recycle=300,
-)
-sync_engine = create_engine(
-    settings.database_url.replace("postgresql+asyncpg://", "postgresql+psycopg://")
-)
+AsyncSessionMaker: TypeAlias = async_sessionmaker[AsyncSession]
 
 
-async_session = async_sessionmaker(async_engine, expire_on_commit=False)
+def create_async_engine() -> AsyncEngine:
+    return _create_async_engine(
+        url=settings.database_url,
+        echo=settings.DEBUG,
+        pool_size=settings.DATABASE_POOL_SIZE,
+        pool_recycle=settings.DATABASE_POOL_RECYCLE_SECONDS,
+    )
 
 
-async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
-    async with async_session() as session:
+def create_async_sessionmaker(engine: AsyncEngine) -> async_sessionmaker[AsyncSession]:
+    return async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
+
+
+async def get_db_sessionmaker(
+    request: Request,
+) -> AsyncGenerator[AsyncSessionMaker, None]:
+    async_sessionmaker: AsyncSessionMaker = request.state.async_sessionmaker
+    yield async_sessionmaker
+
+
+async def get_db_session(
+    request: Request,
+    sessionmaker: AsyncSessionMaker = Depends(get_db_sessionmaker),
+) -> AsyncGenerator[AsyncSession, None]:
+    if session := getattr(request.state, "session", None):
         yield session
+    else:
+        async with sessionmaker() as session:
+            try:
+                request.state.session = session
+                yield session
+            except:
+                await session.rollback()
+                raise
+            else:
+                await session.commit()

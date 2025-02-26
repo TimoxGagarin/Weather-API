@@ -13,7 +13,9 @@ class Settings(BaseSettings):
     DB_USER: str = "postgres"
     DB_PASS: str = "postgres"
 
-    API_URL: str
+    DATABASE_POOL_SIZE: int = 5
+    DATABASE_POOL_RECYCLE_SECONDS: int = 300
+
     API_TOKEN: str
 
     templates: Jinja2Templates = Jinja2Templates(directory="api/templates")

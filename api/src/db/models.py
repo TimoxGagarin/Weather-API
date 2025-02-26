@@ -37,7 +37,6 @@ class Queries(Base):
     temp: Mapped[float] = mapped_column(Float, nullable=False)
     wind_speed: Mapped[float] = mapped_column(Float, nullable=False)
     wind_degree: Mapped[int] = mapped_column(Integer, nullable=False)
-    wind_gust: Mapped[int] = mapped_column(Integer, nullable=False)
     description: Mapped[str] = mapped_column(
         String(length=320), index=True, nullable=False
     )
