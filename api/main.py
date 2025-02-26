@@ -11,6 +11,7 @@ from api.src.db.config import (
     create_async_engine,
     create_async_sessionmaker,
 )
+from api.src.pages.pages import router as pages_router
 from api.src.weather.base import BaseWeatherService
 from api.src.weather.owm import OWMWeatherService
 
@@ -35,6 +36,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[State]:
 app = FastAPI(lifespan=lifespan)
 
 app.include_router(queries_router)
+app.include_router(pages_router)
 
 app.add_middleware(
     CORSMiddleware,

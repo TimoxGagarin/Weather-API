@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Weather Service</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        background-color: #f4f4f9;
+      }
+      h1,
+      h2,
+      h3 {
+        color: #333;
+      }
+      .search-container {
+        display: flex;
+        align-items: center;
+        margin-bottom: 20px;
+      }
+      input[type="text"] {
+        padding: 10px;
+        margin-right: 10px;
+        width: 300px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+      }
+      button {
+        padding: 10px 20px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      button:hover {
+        background-color: #0056b3;
+      }
+      #weather {
+        margin-top: 20px;
+        padding: 20px;
+        background-color: #fff;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+      table {
+        margin-top: 20px;
+        width: 100%;
+        border-collapse: collapse;
+        background-color: #fff;
+        border-radius: 4px;
+      }
+      table,
+      th,
+      td {
+        border: 1px solid #ddd;
+      }
+      th,
+      td {
+        padding: 10px;
+        text-align: left;
+      }
+      th {
+        background-color: #f2f2f2;
+      }
+      .pagination {
+        margin-top: 20px;
+        display: flex;
+        justify-content: center;
+      }
+      .pagination button {
+        margin: 0 5px;
+      }
+    </style>
+    <script>
+      let currentPage = 1
+
+      async function searchWeather() {
+        const city = document.getElementById("city").value
+        const response = await fetch("/queries", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ city }),
+        })
+        const data = await response.json()
+        displayWeather(data)
+        reloadPage()
+      }
+
+      function displayWeather(data) {
+        const weatherDiv = document.getElementById("weather")
+        weatherDiv.innerHTML = `
+          <h2>Weather in ${data.city}</h2>
+          <p>Temperature: ${data.temp}°K</p>
+          <p>Wind Speed: ${data.wind_speed} m/s</p>
+          <p>Wind Degree: ${data.wind_degree}°</p>
+          <p>Humidity: ${data.humidity}%</p>
+          <p>Description: ${data.description}</p>
+          <p>Pressure: ${data.pressure} hPa</p>
+          <p>Created at: ${data.created_at}</p>
+        `
+      }
+
+      function reloadPage() {
+        location.reload()
+      }
+
+      async function loadPage(page) {
+        const response = await fetch(`/?page=${page}`)
+        const html = await response.text()
+        const parser = new DOMParser()
+        const doc = parser.parseFromString(html, "text/html")
+        const newContent = doc.querySelector("tbody").innerHTML
+        if (!newContent.trim()) {
+          return
+        }
+        document.querySelector("tbody").innerHTML = newContent
+        currentPage = page
+      }
+
+      function loadPreviousPage() {
+        if (currentPage > 1) {
+          currentPage -= 1
+          loadPage(currentPage)
+        }
+      }
+
+      function loadNextPage() {
+        loadPage(currentPage + 1)
+      }
+    </script>
+  </head>
+  <body>
+    <h1>Weather Service</h1>
+    <div class="search-container">
+      <input type="text" id="city" placeholder="Enter city" required />
+      <button onclick="searchWeather()">Search</button>
+    </div>
+    <div id="weather"></div>
+    <h2>Query History</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>City</th>
+          <th>Temperature (°K)</th>
+          <th>Wind Speed (m/s)</th>
+          <th>Wind Degree (°)</th>
+          <th>Humidity (%)</th>
+          <th>Description</th>
+          <th>Pressure (hPa)</th>
+          <th>Created At</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for query in queries %}
+        <tr>
+          <td>{{ query.city }}</td>
+          <td>{{ query.temp}}</td>
+          <td>{{ query.wind_speed }}</td>
+          <td>{{ query.wind_degree }}</td>
+          <td>{{ query.humidity }}</td>
+          <td>{{ query.description }}</td>
+          <td>{{ query.pressure }}</td>
+          <td>{{ query.created_at }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <div class="pagination">
+      <button onclick="loadPreviousPage()">Previous</button>
+      <button onclick="loadNextPage()">Next</button>
+    </div>
+  </body>
+</html>

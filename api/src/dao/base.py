@@ -27,6 +27,7 @@ class BaseDAO:
             .options(selectinload("*"))
             .offset(offset)
             .limit(limit)
+            .order_by(cls.model.created_at.desc() if cls.model else None)  # type: ignore
         )
         result = await session.execute(query)
         return result.scalars().all()

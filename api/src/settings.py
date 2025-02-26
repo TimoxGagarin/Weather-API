@@ -20,6 +20,8 @@ class Settings(BaseSettings):
     DATABASE_POOL_SIZE: int = 5
     DATABASE_POOL_RECYCLE_SECONDS: int = 300
 
+    templates: Jinja2Templates = Jinja2Templates(directory="api/templates")
+
     API_TOKEN: str
 
     templates: Jinja2Templates = Jinja2Templates(directory="api/templates")
